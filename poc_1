@@ -1,0 +1,167 @@
+import android.os.Bundle; 
+
+import androidx.test.runner.AndroidJUnitRunner; 
+import org.apache.poi.ss.usermodel.*; 
+
+import java.io.FileInputStream; 
+
+import java.io.IOException; 
+import org.json.JSONArray; 
+
+import org.json.JSONObject; 
+
+import java.nio.file.Files; 
+
+import java.nio.file.Paths; 
+
+ 
+
+ 
+
+  
+
+public class CustomEspressoRunner extends AndroidJUnitRunner { 
+
+  
+
+    @Override 
+
+    public void onCreate(Bundle arguments) { 
+
+        super.onCreate(arguments); 
+
+           } 
+
+  
+
+    @Override 
+
+    public void finish(int resultCode, Bundle results) { 
+
+               super.finish(resultCode, results); 
+
+    } 
+
+     
+
+} 
+ 
+  
+
+public class ExcelTestDataReader { 
+
+  
+
+    public static Object[][] readTestDataFromExcel(String filePath, String sheetName) throws IOException { 
+
+        FileInputStream fis = new FileInputStream(filePath); 
+
+        Workbook workbook = WorkbookFactory.create(fis); 
+
+        Sheet sheet = workbook.getSheet(sheetName); 
+
+  
+
+        int rowCount = sheet.getPhysicalNumberOfRows(); 
+
+        int columnCount = sheet.getRow(0).getPhysicalNumberOfCells(); 
+
+  
+
+        Object[][] testData = new Object[rowCount - 1][columnCount]; 
+
+  
+
+        for (int i = 1; i < rowCount; i++) { 
+
+            Row row = sheet.getRow(i); 
+
+            for (int j = 0; j < columnCount; j++) { 
+
+                Cell cell = row.getCell(j); 
+
+                testData[i - 1][j] = cell.toString(); 
+
+            } 
+
+        } 
+
+  
+
+        return testData; 
+
+    } 
+
+} 
+
+ 
+
+  
+
+public class JsonTestDataReader { 
+
+  
+
+    public static Object[][] readTestDataFromJson(String filePath) throws IOException { 
+
+        String jsonContent = new String(Files.readAllBytes(Paths.get(filePath))); 
+
+        JSONArray jsonArray = new JSONArray(jsonContent); 
+
+  
+
+        Object[][] testData = new Object[jsonArray.length()][1]; 
+
+  
+
+        for (int i = 0; i < jsonArray.length(); i++) { 
+
+            JSONObject jsonObject = jsonArray.getJSONObject(i); 
+
+            testData[i][0] = jsonObject.toString(); 
+
+        } 
+
+  
+
+        return testData; 
+
+    } 
+
+} 
+ 
+@Override 
+
+public TestSuite getTestCases() { 
+
+    TestSuite suite = new TestSuite(); 
+
+  
+
+    try { 
+
+    
+
+        Object[][] testData = JsonTestDataReader.readTestDataFromJson("testdata.json"); 
+
+  
+
+        for (Object[] data : testData) { 
+
+            suite.addTest(new Espresso(data));         } 
+
+    } catch (Exception e) { 
+
+        e.printStackTrace(); 
+
+    } 
+
+  
+
+    return suite; 
+
+} 
+
+ 
+
+ 
